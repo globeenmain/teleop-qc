@@ -64,7 +64,10 @@ Status: Claude Opus 5.5 has judged the 200 episodes of the eval set (results bel
 - Backends: Claude through the Anthropic API (default `claude-opus-5-5`, structured outputs, server-side fallback
   when a model declines), and open-weight VLMs through Hugging Face Inference Providers.
 - Eval set: 200 episodes, 100 successful and 100 failed, drawn with seed 0 from the first metadata file and frozen
-  in [`evals/droid_evalset_v1.jsonl`](evals/droid_evalset_v1.jsonl).
+  in [`evals/droid_evalset_v1.jsonl`](evals/droid_evalset_v1.jsonl). Published with the frame grids, the human
+  labels and the verdicts on the Hugging Face Hub:
+  [`2skill3d4u/droid-qc-eval`](https://huggingface.co/datasets/2skill3d4u/droid-qc-eval)
+  ([`scripts/publish_hf.py`](scripts/publish_hf.py)).
 - Reported per judge: balanced accuracy, AUROC with a bootstrap interval, ECE before and after cross-fitted
   isotonic recalibration, share of episodes accepted at 95% precision or rejected at 90% without review, dollars
   per episode and per hour of video.

@@ -16,4 +16,5 @@ The judge first ran on the first 10 episodes of the eval set (`--limit 10`, the 
 hence an estimate of $2.79 for the 200 episodes. The full run cost $2.92 (`dollars` in the report).
 
 The frame grids the judge saw (one JPEG per episode, 54 MB in all) are not in this repository; they are published
-with the eval set on the Hugging Face Hub.
+with the eval set on the Hugging Face Hub, in
+[`2skill3d4u/droid-qc-eval`](https://huggingface.co/datasets/2skill3d4u/droid-qc-eval).
