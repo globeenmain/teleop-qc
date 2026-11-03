@@ -1,7 +1,7 @@
 """Command line: build an eval set, run the signal checks, run a judge, report on its verdicts.
 
     teleop-qc evalset --n 200 --out runs/evalset.jsonl
-    teleop-qc signals --evalset runs/evalset.jsonl --out runs/signals.parquet
+    teleop-qc signals --video-file 0 --out runs/signals.parquet
     teleop-qc judge   --evalset runs/evalset.jsonl --backend anthropic --out runs/claude-opus-5-5.jsonl
     teleop-qc report  runs/claude-opus-5-5.jsonl --evalset runs/evalset.jsonl --plot runs/reliability.png
 """
@@ -68,7 +68,12 @@ def cmd_evalset(args) -> None:
 
 
 def cmd_signals(args) -> None:
-    df, offsets = run_signals(load_evalset(args.evalset))
+    if args.evalset:
+        episodes = load_evalset(args.evalset)
+    else:  # every episode stored in one video file (of the first exterior camera)
+        episodes = [e for e in load_episodes(0) if e.video(CAMERAS[0]).file == args.video_file
+                    and e.video(CAMERAS[0]).chunk == 0]
+    df, offsets = run_signals(episodes)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(args.out)
     print(signals_summary(df, offsets).round(3).to_string(index=False))
@@ -163,7 +168,9 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(run=cmd_evalset)
 
     p = sub.add_parser("signals", help="timestamp, frame and camera-sync checks")
-    p.add_argument("--evalset", type=Path, required=True)
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument("--evalset", type=Path)
+    source.add_argument("--video-file", type=int, help="all episodes of this video file (chunk 0)")
     p.add_argument("--out", type=Path, required=True)
     p.set_defaults(run=cmd_signals)
 
