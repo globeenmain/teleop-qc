@@ -157,6 +157,11 @@ def cmd_report(args) -> None:
         print(f"== {path}")
         for key, value in metrics.items():
             print(f"{key:>24}: {value:.3f}" if isinstance(value, float) else f"{key:>24}: {value}")
+        answered = rows[rows.p_success.notna()]
+        bins = cal.reliability_bins(answered.p_success.to_numpy(float), answered.label.to_numpy(int), n_bins=8,
+                                    strategy="quantile")
+        print("\nreliability diagram, raw probabilities (8 quantile bins):")
+        print(pd.DataFrame([vars(b) for b in bins]).round(3).to_string(index=False))
         print("\nfailure modes named by the judge, by human label:")
         print(pd.crosstab(rows.failure_mode, rows.label.map({True: "success", False: "failure"})).to_string())
         if args.plot:

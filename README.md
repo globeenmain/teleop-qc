@@ -55,7 +55,7 @@ hours of camera video per core-hour.
 
 ## Judges
 
-Status: built and tested against scripted backends; the first runs on real episodes are next.
+Status: Claude Opus 5.5 has judged the 200 episodes of the eval set (results below); open-weight judges are next.
 
 - Input: one JPEG grid, cameras in columns and 6 evenly spaced moments in rows (968x1100 px, about 1,400 image
   tokens). No instruction, for the reason above.
@@ -68,6 +68,48 @@ Status: built and tested against scripted backends; the first runs on real episo
 - Reported per judge: balanced accuracy, AUROC with a bootstrap interval, ECE before and after cross-fitted
   isotonic recalibration, share of episodes accepted at 95% precision or rejected at 90% without review, dollars
   per episode and per hour of video.
+
+### Claude Opus 5.5 on the eval set
+
+```bash
+teleop-qc judge --evalset evals/droid_evalset_v1.jsonl --out runs/claude-opus-5-5.jsonl     # effort medium
+teleop-qc report results/judge_claude-opus-5-5.jsonl --plot results/reliability_claude-opus-5-5.png
+```
+
+The verdicts are in [`results/judge_claude-opus-5-5.jsonl`](results/judge_claude-opus-5-5.jsonl), the report in
+[`results/report_claude-opus-5-5.txt`](results/report_claude-opus-5-5.txt). The judge answered all 200 episodes at
+the first attempt: no abstention, no refusal, no retry.
+
+| Metric | Value |
+|---|---|
+| Balanced accuracy | 0.755 |
+| Successful episodes judged successful | 83.0% |
+| Failed episodes judged failed | 68.0% |
+| AUROC | 0.811 (95% bootstrap interval 0.747 to 0.868) |
+| ECE, 10 bins | 0.064; 0.051 after cross-fitted isotonic recalibration |
+| Brier score | 0.179 |
+| Episodes accepted without review at 95% precision | 0% |
+| Episodes rejected without review at 90% precision | 13.0% |
+| Cost | $2.92 for the 200 episodes: $0.015 per episode, $2.89 per hour of episode |
+
+<img src="results/reliability_claude-opus-5-5.png" alt="Reliability diagram of the Claude Opus 5.5 judge" width="420">
+
+**The judge leans toward success.** It calls 57.5% of the episodes successful when half of them are (a
+probability of exactly 0.5 counts as success). It lets 32 of the 100 failures through, 30 of them with a success
+verdict and no failure seen, and turns down 17 of the 100 successes. FailBench reports the same bias on ambiguous
+evidence. Six moments per camera may miss the moment a grasp slips or an object lands in the wrong place.
+
+**Its confidence is honest, and capped.** Without any recalibration, its probabilities match the human labels
+closely (ECE 0.064): the 38 episodes it scores between 0.40 and 0.60 are 44.7% successful, the 26 between 0.68 and
+0.72 are 69.2% successful. Isotonic recalibration barely moves it (0.051). But it never goes above 0.92, and its 33
+most confident episodes (0.80 to 0.92, mean 0.84) are 81.8% successful: no threshold accepts episodes at 95%
+precision. At the other end, the 21 episodes it scores below 0.25 are all failures, and the recalibrated
+probabilities reject 13% of the episodes at 90% precision.
+
+**What it means for a pipeline.** This judge alone cannot let an episode into a training set without a human
+look, but it can drop about one episode in eight as a failure, and order the review queue so that likely failures
+come first (AUROC 0.81), for $2.89 per hour of episode. Next: open-weight judges through Hugging Face, more moments
+per camera, and a panel of judges, measured on the same 200 episodes.
 
 ## Quick start
 
