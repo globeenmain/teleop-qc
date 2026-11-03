@@ -108,6 +108,11 @@ def report(rows: pd.DataFrame) -> dict:
     answered = rows[rows.p_success.notna()]
     p, y = answered.p_success.to_numpy(float), answered.label.to_numpy(int)
     out = {"episodes": len(rows), "abstained": int(len(rows) - len(answered)), **cal.summary(p, y)}
+    verdict = p >= 0.5  # the same cut as the accuracy in cal.summary
+    out["judged_successful"] = float(verdict.mean())
+    out["true_positive_rate"] = float(verdict[y == 1].mean())  # human successes the judge calls successes
+    out["true_negative_rate"] = float((~verdict)[y == 0].mean())  # human failures the judge calls failures
+    out["balanced_accuracy"] = (out["true_positive_rate"] + out["true_negative_rate"]) / 2
     out["auroc_ci"] = cal.bootstrap_ci(cal.auroc, p, y)
     recalibrated = cal.cross_fit(p, y, method="isotonic")
     out["ece_after_isotonic"] = cal.ece(recalibrated, y)
@@ -118,6 +123,7 @@ def report(rows: pd.DataFrame) -> dict:
     price = PRICES.get(str(rows.model.mode().iat[0]) if rows.model.notna().any() else "", None)
     if price:
         dollars = (rows.input_tokens.sum() * price[0] + rows.output_tokens.sum() * price[1]) / 1e6
+        out["dollars"] = dollars
         out["dollars_per_episode"] = dollars / len(rows)
         out["dollars_per_video_hour"] = dollars / (rows.seconds_of_video.sum() / 3600)
     out["seconds_per_episode"] = float(rows.seconds.mean())
@@ -151,6 +157,8 @@ def cmd_report(args) -> None:
         print(f"== {path}")
         for key, value in metrics.items():
             print(f"{key:>24}: {value:.3f}" if isinstance(value, float) else f"{key:>24}: {value}")
+        print("\nfailure modes named by the judge, by human label:")
+        print(pd.crosstab(rows.failure_mode, rows.label.map({True: "success", False: "failure"})).to_string())
         if args.plot:
             plot_reliability(rows, args.plot, Path(path).stem)
 

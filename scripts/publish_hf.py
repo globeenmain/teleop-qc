@@ -120,7 +120,9 @@ structured outputs), then `teleop-qc report`.
 | metric | value |
 |---|---|
 | episodes judged | {metrics["n"]:.0f} of {metrics["episodes"]} ({metrics["abstained"]} abstentions) |
-| accuracy at p = 0.5 | {metrics["accuracy"]:.3f} |
+| balanced accuracy at p = 0.5 | {metrics["balanced_accuracy"]:.3f} |
+| human successes judged successful | {metrics["true_positive_rate"]:.3f} |
+| human failures judged failed | {metrics["true_negative_rate"]:.3f} |
 | Cohen's kappa | {metrics["kappa"]:.3f} |
 | AUROC (95% bootstrap interval) | {metrics["auroc"]:.3f} ({lo:.3f} to {hi:.3f}) |
 | Brier score | {metrics["brier"]:.3f} |
@@ -128,6 +130,7 @@ structured outputs), then `teleop-qc report`.
 | ECE after cross-fitted isotonic recalibration | {metrics["ece_after_isotonic"]:.3f} |
 | share accepted without review at 95% precision | {metrics["auto_accept_at_95"]:.3f} |
 | share rejected without review at 90% precision | {metrics["auto_reject_at_90"]:.3f} |
+| cost of the run | ${metrics["dollars"]:.2f} |
 | cost per episode | ${metrics["dollars_per_episode"]:.4f} |
 | cost per hour of episode | ${metrics["dollars_per_video_hour"]:.2f} |
 
